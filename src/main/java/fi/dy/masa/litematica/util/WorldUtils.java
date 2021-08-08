@@ -437,13 +437,6 @@ public class WorldUtils
     public static boolean handleEasyPlace(MinecraftClient mc)
     {
         ActionResult result = doEasyPlaceAction(mc);
-
-        if (result == ActionResult.FAIL)
-        {
-            InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.easy_place_fail");
-            return true;
-        }
-
         return result != ActionResult.PASS;
     }
 
