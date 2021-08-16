@@ -611,7 +611,7 @@ public class WorldUtils
 
         if (block instanceof RepeaterBlock)
         {
-            x += ((state.get(RepeaterBlock.DELAY)) - 1) * propertyIncrement;
+            x += ((state.get(RepeaterBlock.DELAY))) * propertyIncrement;
         }
         else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
         {
