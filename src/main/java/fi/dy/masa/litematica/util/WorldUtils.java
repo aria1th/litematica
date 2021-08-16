@@ -601,7 +601,7 @@ public class WorldUtils
         double z = hitVecIn.z;
         Block block = state.getBlock();
         Direction facing = fi.dy.masa.malilib.util.BlockUtils.getFirstPropertyFacingValue(state);
-        final int propertyIncrement = 16;
+        final int propertyIncrement = 32;
         double relX = hitVecIn.x - pos.getX();
 
         if (facing != null)
