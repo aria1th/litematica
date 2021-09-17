@@ -84,6 +84,7 @@ public class PlacementHandler
     {
         int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
 
+
         if (protocolValue < 0)
         {
             return state;
@@ -100,7 +101,7 @@ public class PlacementHandler
                 return null;
             }
         }
-
+        protocolValue /= 2;
         protocolValue &= 0xFFFFFFF0;
 
         if (protocolValue >= 16)
@@ -109,7 +110,7 @@ public class PlacementHandler
 
             if (block instanceof RepeaterBlock)
             {
-                Integer delay = (protocolValue / 16) + 1;
+                Integer delay = (protocolValue / 16) ;
 
                 if (RepeaterBlock.DELAY.getValues().contains(delay))
                 {
