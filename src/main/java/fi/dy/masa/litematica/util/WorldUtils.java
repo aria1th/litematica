@@ -385,7 +385,7 @@ public class WorldUtils
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
             Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
             Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
-                Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
+                (Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld() || Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().getKeysDisplayString() == ""))
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
@@ -581,7 +581,7 @@ public class WorldUtils
         Block block = state.getBlock();
         Direction facing = fi.dy.masa.malilib.util.BlockUtils.getFirstPropertyFacingValue(state);
         Integer railEnumCode = getRailShapeOrder(state);
-        final int propertyIncrement = 32;
+        final int propertyIncrement = 16;
         double relX = hitVecIn.x - pos.getX();
 
         if (facing != null)
@@ -594,7 +594,7 @@ public class WorldUtils
         }
         if (block instanceof RepeaterBlock)
         {
-            x += ((state.get(RepeaterBlock.DELAY))) * propertyIncrement;
+            x += ((state.get(RepeaterBlock.DELAY))-1) * (propertyIncrement);
         }
         else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
         {
