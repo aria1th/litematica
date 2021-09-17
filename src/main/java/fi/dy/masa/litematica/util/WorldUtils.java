@@ -101,7 +101,7 @@ public class WorldUtils
 
     @Nullable
     public static LitematicaSchematic convertSchematicaSchematicToLitematicaSchematic(File inputDir, String inputFileName,
-            boolean ignoreEntities, IStringConsumer feedback)
+                                                                                      boolean ignoreEntities, IStringConsumer feedback)
     {
         SchematicaSchematic schematic = SchematicaSchematic.createFromFile(new File(inputDir, inputFileName));
 
@@ -143,7 +143,7 @@ public class WorldUtils
     }
 
     public static boolean convertStructureToLitematicaSchematic(File structureDir, String structureFileName,
-            File outputDir, String outputFileName, boolean override)
+                                                                File outputDir, String outputFileName, boolean override)
     {
         LitematicaSchematic litematicaSchematic = convertStructureToLitematicaSchematic(structureDir, structureFileName);
         return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
@@ -383,8 +383,8 @@ public class WorldUtils
     public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
-            Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
+                Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
+                Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
                 Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
         {
             WorldUtils.doEasyPlaceAction(mc);
@@ -394,7 +394,7 @@ public class WorldUtils
     public static boolean handleEasyPlace(MinecraftClient mc)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-            DataManager.getToolMode() != ToolMode.REBUILD)
+                DataManager.getToolMode() != ToolMode.REBUILD)
         {
             ActionResult result = doEasyPlaceAction(mc);
 
@@ -540,7 +540,7 @@ public class WorldUtils
     }
 
     private static boolean easyPlaceBlockChecksCancel(BlockState stateSchematic, BlockState stateClient,
-            PlayerEntity player, HitResult trace, ItemStack stack)
+                                                      PlayerEntity player, HitResult trace, ItemStack stack)
     {
         Block blockSchematic = stateSchematic.getBlock();
 
@@ -581,7 +581,7 @@ public class WorldUtils
         Block block = state.getBlock();
         Direction facing = fi.dy.masa.malilib.util.BlockUtils.getFirstPropertyFacingValue(state);
         Integer railEnumCode = getRailShapeOrder(state);
-        final int propertyIncrement = 16;
+        final int propertyIncrement = 32;
         double relX = hitVecIn.x - pos.getX();
 
         if (facing != null)
@@ -594,7 +594,7 @@ public class WorldUtils
         }
         if (block instanceof RepeaterBlock)
         {
-            x += ((state.get(RepeaterBlock.DELAY))-1) * (propertyIncrement);
+            x += ((state.get(RepeaterBlock.DELAY))) * (propertyIncrement);
         }
         else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
         {
@@ -683,7 +683,7 @@ public class WorldUtils
             for (Property<?> p : propList)
             {
                 if ((p instanceof DirectionProperty) == false &&
-                    PlacementHandler.WHITELISTED_PROPERTIES.contains(p))
+                        PlacementHandler.WHITELISTED_PROPERTIES.contains(p))
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
@@ -726,8 +726,8 @@ public class WorldUtils
         if (blockSchematic instanceof SlabBlock)
         {
             if (stateSchematic.get(SlabBlock.TYPE) == SlabType.DOUBLE &&
-                blockClient instanceof SlabBlock &&
-                stateClient.get(SlabBlock.TYPE) != SlabType.DOUBLE)
+                    blockClient instanceof SlabBlock &&
+                    stateClient.get(SlabBlock.TYPE) != SlabType.DOUBLE)
             {
                 if (stateClient.get(SlabBlock.TYPE) == SlabType.TOP)
                 {
@@ -868,8 +868,8 @@ public class WorldUtils
                         IntBoundingBox box = boxes.get(i);
 
                         if (x >= box.minX - range && x <= box.maxX + range &&
-                            y >= box.minY - range && y <= box.maxY + range &&
-                            z >= box.minZ - range && z <= box.maxZ + range)
+                                y >= box.minY - range && y <= box.maxY + range &&
+                                z >= box.minZ - range && z <= box.maxZ + range)
                         {
                             return true;
                         }
