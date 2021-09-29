@@ -100,7 +100,7 @@ public class PlacementHandler
                 return null;
             }
         }
-
+        protocolValue /= 2;
         protocolValue &= 0xFFFFFFF0;
 
         if (protocolValue >= 16)
@@ -109,7 +109,7 @@ public class PlacementHandler
 
             if (block instanceof RepeaterBlock)
             {
-                Integer delay = (protocolValue / 16) + 1;
+                Integer delay = (protocolValue / 16) ;
 
                 if (RepeaterBlock.DELAY.getValues().contains(delay))
                 {
