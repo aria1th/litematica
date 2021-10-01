@@ -467,7 +467,7 @@ public class WorldUtils
                 }
 
                 Vec3d hitPos = trace.getPos();
-                System.out.println(hitPos);
+                //System.out.println(hitPos);
                 Direction sideOrig = trace.getSide();
 
                 // If there is a block in the world right behind the targeted schematic block, then use
@@ -509,7 +509,7 @@ public class WorldUtils
                     //System.out.println("applied v2");
                     hitPos = applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
                 }
-                System.out.println(hitPos);
+                //System.out.println(hitPos);
                 // Mark that this position has been handled (use the non-offset position that is checked above)
                 cacheEasyPlacePosition(pos);
 
