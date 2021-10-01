@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import javax.annotation.Nullable;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.block.Block;
@@ -470,6 +467,7 @@ public class WorldUtils
                 }
 
                 Vec3d hitPos = trace.getPos();
+                System.out.println(hitPos);
                 Direction sideOrig = trace.getSide();
 
                 // If there is a block in the world right behind the targeted schematic block, then use
@@ -498,15 +496,20 @@ public class WorldUtils
                 Direction side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
 
                 // Carpet Accurate Placement protocol support, plus BlockSlab support
+                //if (!Objects.equals(mc.player.getServerBrand(), "fabric")){
+
+                //}
                 if (Configs.Generic.EASY_PLACE_PROTOCOL_V3.getBooleanValue())
                 {
+                    //System.out.println("applied v3");
                     hitPos = applyPlacementProtocolV3(pos, stateSchematic, hitPos);
                 }
                 else
                 {
+                    //System.out.println("applied v2");
                     hitPos = applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
                 }
-
+                System.out.println(hitPos);
                 // Mark that this position has been handled (use the non-offset position that is checked above)
                 cacheEasyPlacePosition(pos);
 
@@ -575,38 +578,41 @@ public class WorldUtils
      */
     public static Vec3d applyCarpetProtocolHitVec(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
-        double x = hitVecIn.x;
+        double code = hitVecIn.x;
         double y = hitVecIn.y;
         double z = hitVecIn.z;
         Block block = state.getBlock();
         Direction facing = fi.dy.masa.malilib.util.BlockUtils.getFirstPropertyFacingValue(state);
         Integer railEnumCode = getRailShapeOrder(state);
-        final int propertyIncrement = 32;
+        final int propertyIncrement = 16;
         double relX = hitVecIn.x - pos.getX();
-
+        if (facing == null && railEnumCode == null)
+        {
+            return new Vec3d (code, y, z);
+        }
         if (facing != null)
         {
-            x = pos.getX() + relX + 2 + (facing.getId() * 2);
+            code = facing.getId();
         }
-        if (railEnumCode != null)
+        else if (railEnumCode != null)
         {
-            x = pos.getX() + relX + 2 + (railEnumCode * 2);
+            code = railEnumCode;
         }
         if (block instanceof RepeaterBlock)
         {
-            x += ((state.get(RepeaterBlock.DELAY))) * (propertyIncrement);
+            code += ((state.get(RepeaterBlock.DELAY))) * (propertyIncrement);
         }
         else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
         {
-            x += propertyIncrement;
+            code += propertyIncrement;
         }
         else if (block instanceof ComparatorBlock && state.get(ComparatorBlock.MODE) == ComparatorMode.SUBTRACT)
         {
-            x += propertyIncrement;
+            code += propertyIncrement;
         }
         else if (block instanceof StairsBlock && state.get(StairsBlock.HALF) == BlockHalf.TOP)
         {
-            x += propertyIncrement;
+            code += propertyIncrement;
         }
         else if (block instanceof SlabBlock && state.get(SlabBlock.TYPE) != SlabType.DOUBLE)
         {
@@ -622,7 +628,7 @@ public class WorldUtils
                 y = pos.getY();
             }
         }
-        return new Vec3d(x, y, z);
+        return new Vec3d(code * 2 + 2 + pos.getX(), y, z);
     }
 
     @Nullable

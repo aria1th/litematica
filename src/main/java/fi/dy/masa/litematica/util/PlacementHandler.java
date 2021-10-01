@@ -101,7 +101,7 @@ public class PlacementHandler
                 return null;
             }
         }
-        protocolValue /= 2;
+        protocolValue >>= 1;
         protocolValue &= 0xFFFFFFF0;
 
         if (protocolValue >= 16)
