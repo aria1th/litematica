@@ -70,23 +70,20 @@ public class PlacementHandler
     @Nullable
     public static BlockState applyPlacementProtocolToPlacementState(BlockState state, UseContext context)
     {
-        if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V3)
+        if (Configs.Generic.EASY_PLACE_PROTOCOL_V3.getBooleanValue())
         {
             return applyPlacementProtocolV3(state, context);
         }
-        else if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V2)
-        {
-            return applyPlacementProtocolV2(state, context);
-        }
         else
         {
-            return state;
+            return applyPlacementProtocolV2(state, context);
         }
     }
 
     public static BlockState applyPlacementProtocolV2(BlockState state, UseContext context)
     {
         int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
+
 
         if (protocolValue < 0)
         {
@@ -104,7 +101,7 @@ public class PlacementHandler
                 return null;
             }
         }
-
+        protocolValue >>= 1;
         protocolValue &= 0xFFFFFFF0;
 
         if (protocolValue >= 16)
@@ -113,7 +110,7 @@ public class PlacementHandler
 
             if (block instanceof RepeaterBlock)
             {
-                Integer delay = (protocolValue / 16) + 1;
+                Integer delay = (protocolValue / 16) ;
 
                 if (RepeaterBlock.DELAY.getValues().contains(delay))
                 {
@@ -175,7 +172,7 @@ public class PlacementHandler
             for (Property<?> p : propList)
             {
                 if ((p instanceof DirectionProperty) == false &&
-                    WHITELISTED_PROPERTIES.contains(p))
+                        WHITELISTED_PROPERTIES.contains(p))
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
@@ -192,7 +189,7 @@ public class PlacementHandler
                         T value = list.get(valueIndex);
 
                         if (state.get(prop).equals(value) == false &&
-                            value != SlabType.DOUBLE) // don't allow duping slabs by forcing a double slab via the protocol
+                                value != SlabType.DOUBLE) // don't allow duping slabs by forcing a double slab via the protocol
                         {
                             //System.out.printf("applying %s: %s\n", prop.getName(), value);
                             state = state.with(prop, value);
@@ -286,7 +283,7 @@ public class PlacementHandler
         {
             Vec3d pos = ctx.getHitPos();
             return new UseContext(ctx.getWorld(), ctx.getBlockPos(), ctx.getSide(), new Vec3d(pos.x, pos.y, pos.z),
-                                  ctx.getPlayer(), hand, ctx);
+                    ctx.getPlayer(), hand, ctx);
         }
 
         public World getWorld()
