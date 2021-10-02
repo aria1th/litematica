@@ -4,16 +4,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import javax.annotation.Nullable;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.AbstractRailBlock;
-import net.minecraft.block.DetectorRailBlock;
-import net.minecraft.block.RailBlock;
-import net.minecraft.block.PoweredRailBlock;
 import net.minecraft.block.ComparatorBlock;
 import net.minecraft.block.RepeaterBlock;
 import net.minecraft.block.SlabBlock;
@@ -98,7 +97,7 @@ public class WorldUtils
 
     @Nullable
     public static LitematicaSchematic convertSchematicaSchematicToLitematicaSchematic(File inputDir, String inputFileName,
-                                                                                      boolean ignoreEntities, IStringConsumer feedback)
+            boolean ignoreEntities, IStringConsumer feedback)
     {
         SchematicaSchematic schematic = SchematicaSchematic.createFromFile(new File(inputDir, inputFileName));
 
@@ -140,7 +139,7 @@ public class WorldUtils
     }
 
     public static boolean convertStructureToLitematicaSchematic(File structureDir, String structureFileName,
-                                                                File outputDir, String outputFileName, boolean override)
+            File outputDir, String outputFileName, boolean override)
     {
         LitematicaSchematic litematicaSchematic = convertStructureToLitematicaSchematic(structureDir, structureFileName);
         return litematicaSchematic != null && litematicaSchematic.writeToFile(outputDir, outputFileName, override);
@@ -380,9 +379,9 @@ public class WorldUtils
     public static void easyPlaceOnUseTick(MinecraftClient mc)
     {
         if (mc.player != null && DataManager.getToolMode() != ToolMode.REBUILD &&
-                Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-                Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
-                Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
+            Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
+            Configs.Generic.EASY_PLACE_HOLD_ENABLED.getBooleanValue() &&
+            Hotkeys.EASY_PLACE_ACTIVATION.getKeybind().isKeybindHeld())
         {
             WorldUtils.doEasyPlaceAction(mc);
         }
@@ -391,13 +390,13 @@ public class WorldUtils
     public static boolean handleEasyPlace(MinecraftClient mc)
     {
         if (Configs.Generic.EASY_PLACE_MODE.getBooleanValue() &&
-                DataManager.getToolMode() != ToolMode.REBUILD)
+            DataManager.getToolMode() != ToolMode.REBUILD)
         {
             ActionResult result = doEasyPlaceAction(mc);
 
             if (result == ActionResult.FAIL)
             {
-                //InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.easy_place_fail");
+                InfoUtils.showGuiOrInGameMessage(MessageType.WARNING, "litematica.message.easy_place_fail");
                 return true;
             }
 
@@ -410,16 +409,19 @@ public class WorldUtils
     private static ActionResult doEasyPlaceAction(MinecraftClient mc)
     {
         RayTraceWrapper traceWrapper;
+        double traceMaxRange;
+
+        traceMaxRange = Configs.Generic.EASY_PLACE_VANILLA_REACH.getBooleanValue() ? 4.5 : 6;
 
         if (Configs.Generic.EASY_PLACE_FIRST.getBooleanValue())
         {
             // Temporary hack, using this same config here
             boolean targetFluids = Configs.InfoOverlays.INFO_OVERLAYS_TARGET_FLUIDS.getBooleanValue();
-            traceWrapper = RayTraceUtils.getGenericTrace(mc.world, mc.player, 6, true, targetFluids, false);
+            traceWrapper = RayTraceUtils.getGenericTrace(mc.world, mc.player, traceMaxRange, true, targetFluids, false);
         }
         else
         {
-            traceWrapper = RayTraceUtils.getFurthestSchematicWorldTraceBeforeVanilla(mc.world, mc.player, 6);
+            traceWrapper = RayTraceUtils.getFurthestSchematicWorldTraceBeforeVanilla(mc.world, mc.player, traceMaxRange);
         }
 
         if (traceWrapper == null)
@@ -430,7 +432,7 @@ public class WorldUtils
         if (traceWrapper.getHitType() == RayTraceWrapper.HitType.SCHEMATIC_BLOCK)
         {
             BlockHitResult trace = traceWrapper.getBlockHitResult();
-            HitResult traceVanilla = RayTraceUtils.getRayTraceFromEntity(mc.world, mc.player, false, 6);
+            HitResult traceVanilla = RayTraceUtils.getRayTraceFromEntity(mc.world, mc.player, false, traceMaxRange);
             BlockPos pos = trace.getBlockPos();
             World world = SchematicWorldHandler.getSchematicWorld();
             BlockState stateSchematic = world.getBlockState(pos);
@@ -467,7 +469,6 @@ public class WorldUtils
                 }
 
                 Vec3d hitPos = trace.getPos();
-                //System.out.println(hitPos);
                 Direction sideOrig = trace.getSide();
 
                 // If there is a block in the world right behind the targeted schematic block, then use
@@ -495,21 +496,21 @@ public class WorldUtils
 
                 Direction side = applyPlacementFacing(stateSchematic, sideOrig, stateClient);
 
-                // Carpet Accurate Placement protocol support, plus BlockSlab support
-                //if (!Objects.equals(mc.player.getServerBrand(), "fabric")){
-
-                //}
-                if (Configs.Generic.EASY_PLACE_PROTOCOL_V3.getBooleanValue())
+                if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V3)
                 {
-                    //System.out.println("applied v3");
                     hitPos = applyPlacementProtocolV3(pos, stateSchematic, hitPos);
                 }
-                else
+                else if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.V2)
                 {
-                    //System.out.println("applied v2");
+                    // Carpet Accurate Placement protocol support, plus BlockSlab support
                     hitPos = applyCarpetProtocolHitVec(pos, stateSchematic, hitPos);
                 }
-                //System.out.println(hitPos);
+                else if (Configs.Generic.EASY_PLACE_PROTOCOL.getOptionListValue() == EasyPlaceProtocol.SLAB_ONLY)
+                {
+                    //BlockSlab support only
+                    hitPos = applyBlockSlabProtocol(pos, stateSchematic, hitPos);
+                }
+
                 // Mark that this position has been handled (use the non-offset position that is checked above)
                 cacheEasyPlacePosition(pos);
 
@@ -543,7 +544,7 @@ public class WorldUtils
     }
 
     private static boolean easyPlaceBlockChecksCancel(BlockState stateSchematic, BlockState stateClient,
-                                                      PlayerEntity player, HitResult trace, ItemStack stack)
+            PlayerEntity player, HitResult trace, ItemStack stack)
     {
         Block blockSchematic = stateSchematic.getBlock();
 
@@ -578,82 +579,72 @@ public class WorldUtils
      */
     public static Vec3d applyCarpetProtocolHitVec(BlockPos pos, BlockState state, Vec3d hitVecIn)
     {
-        double code = hitVecIn.x;
+        double x = hitVecIn.x;
         double y = hitVecIn.y;
         double z = hitVecIn.z;
         Block block = state.getBlock();
         Direction facing = fi.dy.masa.malilib.util.BlockUtils.getFirstPropertyFacingValue(state);
-        Integer railEnumCode = getRailShapeOrder(state);
         final int propertyIncrement = 16;
         double relX = hitVecIn.x - pos.getX();
-        if (facing == null && railEnumCode == null)
-        {
-            return new Vec3d (code, y, z);
-        }
+
         if (facing != null)
         {
-            code = facing.getId();
+            x = pos.getX() + relX + 2 + (facing.getId() * 2);
         }
-        else if (railEnumCode != null)
-        {
-            code = railEnumCode;
-        }
+
         if (block instanceof RepeaterBlock)
         {
-            code += ((state.get(RepeaterBlock.DELAY))) * (propertyIncrement);
+            x += ((state.get(RepeaterBlock.DELAY)) - 1) * propertyIncrement;
         }
         else if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.HALF) == BlockHalf.TOP)
         {
-            code += propertyIncrement;
+            x += propertyIncrement;
         }
         else if (block instanceof ComparatorBlock && state.get(ComparatorBlock.MODE) == ComparatorMode.SUBTRACT)
         {
-            code += propertyIncrement;
+            x += propertyIncrement;
         }
         else if (block instanceof StairsBlock && state.get(StairsBlock.HALF) == BlockHalf.TOP)
         {
-            code += propertyIncrement;
+            x += propertyIncrement;
         }
         else if (block instanceof SlabBlock && state.get(SlabBlock.TYPE) != SlabType.DOUBLE)
         {
             //x += 10; // Doesn't actually exist (yet?)
 
             // Do it via vanilla
-            if (state.get(SlabBlock.TYPE) == SlabType.TOP)
-            {
-                y = pos.getY() + 0.9;
-            }
-            else
-            {
-                y = pos.getY();
-            }
+            y = getBlockSlabY(pos, state);
         }
-        return new Vec3d(code * 2 + 2 + pos.getX(), y, z);
+
+        return new Vec3d(x, y, z);
     }
 
-    @Nullable
-    public static Integer getRailShapeOrder(BlockState state)
+    private static double getBlockSlabY(BlockPos pos, BlockState state)
     {
-        Block stateBlock = state.getBlock();
-        if (stateBlock instanceof AbstractRailBlock)
+        double y = pos.getY();
+
+        if (state.get(SlabBlock.TYPE) == SlabType.TOP)
         {
-            if (stateBlock instanceof RailBlock)
-            {
-                return state.get(RailBlock.SHAPE).ordinal();
-            }
-            else if (stateBlock instanceof DetectorRailBlock)
-            {
-                return state.get(DetectorRailBlock.SHAPE).ordinal();
-            }
-            else
-            {
-                return state.get(PoweredRailBlock.SHAPE).ordinal();
-            }
+            y += 0.9;
         }
-        else
+
+        return y;
+    }
+
+    private static Vec3d applyBlockSlabProtocol(BlockPos pos, BlockState state, Vec3d hitVecIn)
+    {
+        double x = hitVecIn.x;
+        double y = hitVecIn.y;
+        double z = hitVecIn.z;
+        Block block = state.getBlock();
+
+        if (block instanceof SlabBlock && state.get(SlabBlock.TYPE) != SlabType.DOUBLE)
         {
-            return null;
+            // Do it via vanilla
+            y = getBlockSlabY(pos, state);
         }
+
+        return new Vec3d(x, y, z);
     }
 
     public static <T extends Comparable<T>> Vec3d applyPlacementProtocolV3(BlockPos pos, BlockState state, Vec3d hitVecIn)
@@ -689,7 +680,7 @@ public class WorldUtils
             for (Property<?> p : propList)
             {
                 if ((p instanceof DirectionProperty) == false &&
-                        PlacementHandler.WHITELISTED_PROPERTIES.contains(p))
+                    PlacementHandler.WHITELISTED_PROPERTIES.contains(p))
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
@@ -732,8 +723,8 @@ public class WorldUtils
         if (blockSchematic instanceof SlabBlock)
         {
             if (stateSchematic.get(SlabBlock.TYPE) == SlabType.DOUBLE &&
-                    blockClient instanceof SlabBlock &&
-                    stateClient.get(SlabBlock.TYPE) != SlabType.DOUBLE)
+                blockClient instanceof SlabBlock &&
+                stateClient.get(SlabBlock.TYPE) != SlabType.DOUBLE)
             {
                 if (stateClient.get(SlabBlock.TYPE) == SlabType.TOP)
                 {
@@ -874,8 +865,8 @@ public class WorldUtils
                         IntBoundingBox box = boxes.get(i);
 
                         if (x >= box.minX - range && x <= box.maxX + range &&
-                                y >= box.minY - range && y <= box.maxY + range &&
-                                z >= box.minZ - range && z <= box.maxZ + range)
+                            y >= box.minY - range && y <= box.maxY + range &&
+                            z >= box.minZ - range && z <= box.maxZ + range)
                         {
                             return true;
                         }
